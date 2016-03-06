@@ -17,13 +17,16 @@
 int16_t *createTBL(void);
 
 struct FIBRoute {
-    uint32_t *prefix ;  /* Next in list */
-    int *prefixLength;          /* IP address   */
-    int *outInterface;      /* Bytes sent   */
+    uint32_t *prefix ;  /* IP address */
+    int *prefixLength;          /* Prefijo CIRD   */
+    int *outInterface;      /* Router output interface   */
 };
 
 int16_t formatTableEntry(int16_t value);
-
+/**
+    Helper function that allows printing in binary format
+ 
+ */
 const char* toBinaryString(unsigned int num)
 {
     static char buffer[32*sizeof(num)+1];
@@ -34,6 +37,9 @@ const char* toBinaryString(unsigned int num)
     return pBuffer;
 }
 
+/**
+    Creates the table
+ */
 void insert(int16_t *TBL24, uint8_t *TBLLong, struct FIBRoute *fibLine );
 
 void insertInLongTable(uint8_t  *TBL24, int16_t position, int16_t nextHop , int repeat);
