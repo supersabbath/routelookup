@@ -127,7 +127,7 @@ void insert(int16_t *TBL24, uint8_t *TBLLong, struct FIBRoute *fibLine ) {
         int negative  =formatTableEntry(offset);
         TBL24[tbl24Position] = negative; // se mete el valor en negativo, para indentificarlo luego
           printf(" TBL24[ %i] = %i \n",tbl24Position,TBL24[tbl24Position]);
-        insertInLongTable(TBLLong , offset, *fibLine->outInterface, *range);
+        insertInLongTable(TBLLong , offset * 256, *fibLine->outInterface, 256-offset);
     }
     
 
@@ -138,7 +138,7 @@ void insertInLongTable(uint8_t *TBLLong, int16_t position, int16_t nextHop , int
 
     for (int i =0; i < repeat; i++) {
         
-         TBLLong[position] = formatTableEntry(nextHop);
+         TBLLong[abs(position)] = nextHop;
     }
 
 }
