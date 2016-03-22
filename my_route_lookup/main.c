@@ -14,15 +14,21 @@
 
 #define  TBL24_SIZE 16777216
 #define  TBLLONG_SIZE 65536
-int16_t *createTBL(void);
 
-struct FIBRoute {
-    uint32_t *prefix ;  /* IP address */
-    int *prefixLength;          /* Prefijo CIRD   */
-    int *outInterface;      /* Router output interface   */
+struct IpRoute {
+    struct IpRoute *nextRoute;  /* Next in list */
+    uint32_t ip;          /* IP address   */
+    uint16_t  outputInterface;      /* Bytes sent   */
 };
 
-int16_t formatTableEntry(int16_t value);
+struct IpRoute* ipRoute(uint32_t ip, uint16_t  nextHop)
+{
+    struct IpRoute *p = malloc(sizeof(struct IpRoute));
+    p->ip = ip;
+    p->outputInterface = nextHop;
+    return p;
+}// Now you returning the object what p is pointing to.
+
 /**
     Helper function that allows printing in binary format
  
@@ -37,50 +43,109 @@ const char* toBinaryString(unsigned int num)
     return pBuffer;
 }
 
-/**
-    Creates the table
- */
-void insert(int16_t *TBL24, uint8_t *TBLLong, struct FIBRoute *fibLine );
+void print_ip(int ip)
+{
+    unsigned char bytes[4];
+    bytes[0] = ip & 0xFF;
+    bytes[1] = (ip >> 8) & 0xFF;
+    bytes[2] = (ip >> 16) & 0xFF;
+    bytes[3] = (ip >> 24) & 0xFF;
+    printf("%d.%d.%d.%d\n", bytes[3], bytes[2], bytes[1], bytes[0]);
+}
 
-void insertInLongTable(uint8_t  *TBL24, int16_t position, int16_t nextHop , int repeat);
+/******************* INSERTION ***************************
+    Tables creation
+ *********************************************************/
+
+int16_t *createTBL(void);
+
+struct FIBRoute {
+    uint32_t *prefix ;  /* IP address */
+    int *prefixLength;          /* Prefijo CIRD   */
+    int *outInterface;      /* Router output interface   */
+};
+
+/*
+ flip the first bit to 1, example 128 returns -128, 0 returns -1
+ */
+int formatTableEntry(int  value);
+
+void insert(int16_t *TBL24, struct IpRoute *TBLLong, struct FIBRoute *fibLine );
+
+void insertInLongTable(struct IpRoute *TBLLon, uint16_t position, struct FIBRoute *fibLine);
+
+/******************* SEARCH ******************************
+    SEARCH ALGORITHM
+ *********************************************************/
+/*
+    lookup()
+    @param TBL24 . pointer to an array array[2^24] of int16_t
+    @param TBLLong pointer to an array[2^20] of  struct IpRoute
+    @returns the output interface associated to an ip .
+ */
+
+int lookup(uint32_t ip,int16_t *TBL24 , struct IpRoute *TBLLong,int *memoryAccesses);
 
 int main(int argc, const char * argv[]) {
     // insert code here...
     print ("Starting Routing Algorithm");
     int16_t test =  2;
     test = formatTableEntry(2);
-    
-    if ( initializeIO(argv[1], argv[2]) == OK) {
+    int status = initializeIO(argv[1], argv[2]) ;
+
+    if (status == OK) {
         
         print("Intialize IO OK");
         
         int16_t *TBL24 = createTBL();
-        uint8_t *TBLLong =  calloc(TBLLONG_SIZE, sizeof(uint8_t));
-        
+        // Creates the secondary table
+        struct IpRoute *TBLLong =  calloc(TBLLONG_SIZE, sizeof(struct IpRoute));
+        //
         uint32_t *prefix = calloc(1, sizeof(uint32_t));
         int *prefixLength = (int*)calloc(1,sizeof(int));
         int *outInterface = (int*)calloc(1,sizeof(int));
-        
-        
-        // readFIBLine(prefix, length, outInterface);
+      
         
         while ((REACHED_EOF != readFIBLine(prefix, prefixLength, outInterface)) ) {
             
             struct FIBRoute *fib = calloc(1,sizeof(struct FIBRoute));;
-            
+        
             fib->prefix = prefix;
             fib->prefixLength = prefixLength;
             fib->outInterface = outInterface;
-            
+            //printf("\n\n ***************  Inserting : %u ***************\n", *fib->prefix);
+            print_ip (*prefix);
+            //printf ( "  length: %u\n",*fib->prefixLength);
+            //printf ( "  outInterface: %u\n",*fib->outInterface);
             insert(TBL24, TBLLong, fib);
             
-          //  printf("Inseting %u \n" , *prefix);
+            free(fib);
+
         }
+        free(prefix);
+        free(outInterface);
+        free(prefixLength);
+        //printf("Build of table routing Done!");
         
-        printf("\n\nfinally TBL24[0] = %hd, \n TBL24[ 8394499] = %hd \n TBL24[16777216] = %hd \n TBL24[4194304]= %hd\n",TBL24[0], TBL24[ 8394499],TBL24[ 8388608],TBL24[419430] );
-        printf("\n TBL24[ 13287424] = %hd  \n TBL24[ 13078528] %hd \n  TBL24[ 11263999]  = %hd \n",TBL24[ 13287424],TBL24[ 13078528], TBL24[11263999]  );
-        printf("stop \n");
+        uint32_t *ip = calloc(1, sizeof(uint32_t));
+       struct timeval start, end;
+    
+        while ((REACHED_EOF != readInputPacketFileLine(ip) ) )
+        {
+            gettimeofday(&start, NULL);
+            int *memAccesses = calloc(1, sizeof(int));
+            int outInterface = lookup(*ip,TBL24,TBLLong,memAccesses);
+            gettimeofday(&end, NULL);
+            double *search = calloc(1, sizeof(double));
+            printOutputLine(*ip, outInterface, &start, &end, search, *memAccesses);
+            //printf("Total time %f \n",*search);
+        }
+
+    }else {
+        printIOExplanationError(status);
     }
+    /// Busqueda
+    
     
     return 0;
 }
@@ -89,68 +154,114 @@ int main(int argc, const char * argv[]) {
 void addressRanges (int prefixLength, int *positionsToSave){
     
     *positionsToSave = pow(2, 24-prefixLength);
-   // printf("Should set %d \n", *positionsToSave);
+   // //printf("Should set %d \n", *positionsToSave);
     
 }
 
 
-void insert(int16_t *TBL24, uint8_t *TBLLong, struct FIBRoute *fibLine ) {
+void insert(int16_t *TBL24, struct IpRoute *TBLLong, struct FIBRoute *fibLine ) {
     
     int *netMask = (int*)calloc(1,sizeof(int));
     int *range = (int*)calloc(1,sizeof(int));
     
 
     getNetmask(24, netMask);
-    print(toBinaryString(*netMask));
-    print(toBinaryString(*fibLine->prefix));
-    
     addressRanges(*fibLine->prefixLength, range);
    
     uint32_t tmp = (*fibLine->prefix) & (*netMask);
     uint32_t tbl24Position = tmp >> 8;
+    int test = 3401580560; // 134.24.124.76/30	24203
 
+    
+    if (*fibLine->prefix == test) {
+        print_ip(test);
+        int hastPosition = hash(*fibLine->prefix,TBL24_SIZE);
+        
+        printf("\n \n hash %i, calculatet %i \n",hastPosition,tbl24Position);
+    }
+    
     if (*fibLine->prefixLength < 24) {
         
-       
         int repeat = *range;
+        
         for (int i =0; i <repeat ; i++) {
             
             int tmp = tbl24Position +i;
-            TBL24[ tmp] = *fibLine->outInterface;
             
-//            printf(" TBL24[ %i] = %i \n",tmp,TBL24[tmp]);
+            TBL24[ tmp] = *fibLine->outInterface;
+
         }
-       
-        
-        printf("range = %i \n",repeat);
-        printf(" TBL24[ %i] = %i \n",tbl24Position,TBL24[tbl24Position]);
-        printf(" TBL24[ %i] = %i \n",(tbl24Position +repeat),TBL24[(tbl24Position +(repeat -1))]);
+ 
+        printf("*************** TBL24 *************\n");
+        printf("        range = %i \n",repeat);
+        printf("        TBL24[ %i] = %i \n",tbl24Position,TBL24[tbl24Position]);
+        printf("        TBL24[ %i] = %i \n",(tbl24Position +(repeat-1)),TBL24[(tbl24Position +(repeat -1))]);
         
     }else {
-        int d  = 0xFFFFFFFF >> 24;
-        int offset = (*fibLine->prefix) & d;
-      
-        int negative  =formatTableEntry(offset);
-        TBL24[tbl24Position] = negative; // se mete el valor en negativo, para indentificarlo luego
-          printf(" TBL24[ %i] = %i \n",tbl24Position,TBL24[tbl24Position]);
-        insertInLongTable(TBLLong , offset * 256, *fibLine->outInterface, 256-offset);
-    }
-    
-
-}
-
-
-void insertInLongTable(uint8_t *TBLLong, int16_t position, int16_t nextHop , int repeat){
-
-    for (int i =0; i < repeat; i++) {
+        printf("*************** TBLLong *************\n");
+        int hastPosition = hash(*fibLine->prefix,TBLLONG_SIZE);
+        int negative = formatTableEntry(hastPosition);
+        TBL24[tbl24Position] = negative;
         
-         TBLLong[abs(position)] = nextHop;
+        insertInLongTable(TBLLong , hastPosition, fibLine);
+    }
+    free(netMask);
+    free(range);
+
+}
+
+
+void insertInLongTable(struct IpRoute *TBLLon, uint16_t position, struct FIBRoute *fibLine){
+   
+    
+    int d  = 0x000000FF;
+ 
+    int lessImportantBits = *fibLine->prefix & d;
+
+    struct IpRoute *tmp, *head = &TBLLon[abs(position)];
+    
+    if (head->nextRoute == NULL) {
+        
+        tmp = head;
+        tmp->ip = *fibLine->prefix;
+        tmp->outputInterface = *fibLine->outInterface;
+        
+        TBLLon[position] = *tmp;
+        
+        for (int i=1; i < 255; i++) {
+            struct IpRoute *next = ipRoute(*fibLine->prefix, *fibLine->outInterface);
+            
+            tmp->nextRoute = next;
+            tmp = next;
+        }
+    } else {
+        
+        
+        int counter = 0;
+        for (tmp = head; tmp != NULL; tmp = tmp->nextRoute) {
+            counter++;
+            if (counter > 255) {
+                printf("Problems");
+            }else if (counter >= lessImportantBits) {
+                    
+                tmp->ip = *fibLine->prefix;
+                tmp->outputInterface = *fibLine->outInterface;
+            }
+            
+        }
+        
     }
 
 }
 
-int16_t formatTableEntry(int16_t value) {
+
+
+int formatTableEntry(int  value) {
     
+  
+    if (value == 0){
+        return ~value;
+    }
     return -1*value;
     
 }
@@ -172,4 +283,52 @@ int16_t *createTBL(void){
     
     return TBL;
 }
+/***************************** SEARCH *********************/
+
+int lookup(uint32_t ip,int16_t *TBL24 , struct IpRoute *TBLLong,int *memoryAccesses)
+{
+    int *netMask = (int*)calloc(1,sizeof(int));
+    
+  //  print(toBinaryString(ip));
+    
+    getNetmask(24, netMask);
+    uint32_t tmp = ip & (*netMask);
+    uint32_t tbl24Position = tmp >> 8;
+    
+  //  print(toBinaryString(*netMask));
+    
+    int nextHop = TBL24[tbl24Position];
+    print_ip(ip);
+    printf(" \n output for %i \n", nextHop);
+    
+    if (nextHop < 0) {
+        
+        int d  = 0x000000FF;
+        int lessImportantBits = ip & d;
+        print_ip(lessImportantBits);
+        
+      
+        struct IpRoute *p , *head  = &TBLLong[tbl24Position];
+        uint8_t counter = 0;
+        
+        for (p = head; p != NULL; p = p->nextRoute) {
+            
+            if (counter == lessImportantBits){
+                *memoryAccesses = counter;
+                return p->outputInterface;
+            }else {
+                return TBL24_SIZE;
+            }
+        }
+        
+        
+    }else{
+        *memoryAccesses =1;
+        return  nextHop;
+    }
+
+    return TBL24_SIZE;
+}
+
+
 

@@ -164,6 +164,7 @@ int readInputPacketFileLine(uint32_t *IPAddress){
 	else
 	fprintf(outputFile,"%i.%i.%i.%i;%i;%i;%.0lf\n",IPAddress >> 24, (IPAddress >> 16) & 0x000000ff, (IPAddress >> 8) & 0x000000ff, IPAddress & 0x000000ff , outInterface,numberOfHashtables, *searchingTime);  
 
+  //   printf("\n\n %i.%i.%i.%i;%i;%i;%.0lf\n",IPAddress >> 24, (IPAddress >> 16) & 0x000000ff, (IPAddress >> 8) & 0x000000ff, IPAddress & 0x000000ff , outInterface,numberOfHashtables, *searchingTime);
 }
 
 

@@ -25,8 +25,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0CFBE50B1CA0474900EE441B /* pruebatst.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pruebatst.txt; sourceTree = "<group>"; };
 		E136FB551C8C2A7100C67B90 /* prueba0.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = prueba0.txt; sourceTree = "<group>"; };
-		E136FB561C8C2A7100C67B90 /* prueba0.txt.out */ = {isa = PBXFileReference; lastKnownFileType = text; path = prueba0.txt.out; sourceTree = "<group>"; };
 		E136FB571C8C2A7100C67B90 /* prueba1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = prueba1.txt; sourceTree = "<group>"; };
 		E136FB581C8C2A7100C67B90 /* prueba2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = prueba2.txt; sourceTree = "<group>"; };
 		E136FB591C8C2A7100C67B90 /* prueba3.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = prueba3.txt; sourceTree = "<group>"; };
@@ -55,12 +55,12 @@
 			isa = PBXGroup;
 			children = (
 				E136FB551C8C2A7100C67B90 /* prueba0.txt */,
-				E136FB561C8C2A7100C67B90 /* prueba0.txt.out */,
 				E136FB571C8C2A7100C67B90 /* prueba1.txt */,
 				E136FB581C8C2A7100C67B90 /* prueba2.txt */,
 				E136FB591C8C2A7100C67B90 /* prueba3.txt */,
 				E136FB5A1C8C2A7100C67B90 /* routing_table.txt */,
 				E136FB5B1C8C2A7100C67B90 /* routing_table_simple.txt */,
+				0CFBE50B1CA0474900EE441B /* pruebatst.txt */,
 			);
 			name = data;
 			path = my_route_lookup/data;
