@@ -90,8 +90,7 @@ int lookup(uint32_t ip,int16_t *TBL24 , struct IpRoute *TBLLong,int *memoryAcces
 int main(int argc, const char * argv[]) {
     // insert code here...
     print ("Starting Routing Algorithm");
-    int16_t test =  2;
-    test = formatTableEntry(2);
+  
     int status = initializeIO(argv[1], argv[2]) ;
 
     if (status == OK) {
@@ -171,7 +170,7 @@ void insert(int16_t *TBL24, struct IpRoute *TBLLong, struct FIBRoute *fibLine ) 
    
     uint32_t tmp = (*fibLine->prefix) & (*netMask);
     uint32_t tbl24Position = tmp >> 8;
-    int test = 3401580560; // 134.24.124.76/30	24203
+//    int test = 3401580560; // 134.24.124.76/30	24203
 
     
 //    if (*fibLine->prefix == test) {
@@ -184,8 +183,8 @@ void insert(int16_t *TBL24, struct IpRoute *TBLLong, struct FIBRoute *fibLine ) 
     if (*fibLine->prefixLength < 24) {
         
         int repeat = *range;
-        
-        for (int i =0; i <repeat ; i++) {
+        int i;
+        for ( i =0; i <repeat ; i++) {
             
             int tmp = tbl24Position +i;
             
@@ -229,8 +228,8 @@ void insertInLongTable(struct IpRoute *TBLLon, uint16_t position, struct FIBRout
         tmp->outputInterface = *fibLine->outInterface;
         
         TBLLon[position] = *tmp;
-        
-        for (int i=1; i < 255; i++) {
+        int i;
+        for ( i=1; i < 255; i++) {
             struct IpRoute *next = ipRoute(*fibLine->prefix, *fibLine->outInterface);
             
             tmp->nextRoute = next;
