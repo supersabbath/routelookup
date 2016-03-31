@@ -16,4 +16,7 @@ void getNetmask (int prefixLength, int *netmask);
  * For more info: https://gist.github.com/cpq/8598442
  ********************************************************************/
 int hash(uint32_t IPAddress, int sizeHashTable);
-
+/* Helper fx to debug binary ips*/
+const char* toBinaryString(unsigned int num);
+/* Prints an inter in IP format 10.0.0.0 */
+void print_ip(int ip);

@@ -30,29 +30,6 @@ struct IpRoute* ipRoute(uint32_t ip, uint16_t  nextHop)
     return p;
 }// Now you returning the object what p is pointing to.
 
-/**
-    Helper function that allows printing in binary format
- 
- */
-const char* toBinaryString(unsigned int num)
-{
-    static char buffer[32*sizeof(num)+1];
-    char* pBuffer = &buffer[sizeof(buffer)-1];
-    
-    do *--pBuffer = '0' + (num & 1);
-    while (num >>= 1);
-    return pBuffer;
-}
-
-void print_ip(int ip)
-{
-    unsigned char bytes[4];
-    bytes[0] = ip & 0xFF;
-    bytes[1] = (ip >> 8) & 0xFF;
-    bytes[2] = (ip >> 16) & 0xFF;
-    bytes[3] = (ip >> 24) & 0xFF;
-    printf("%d.%d.%d.%d\n", bytes[3], bytes[2], bytes[1], bytes[0]);
-}
 
 /******************* INSERTION ***************************
     Tables creation
@@ -90,8 +67,11 @@ int lookup(uint32_t ip,int16_t *TBL24 , struct IpRoute *TBLLong,int *memoryAcces
 int main(int argc, const char * argv[]) {
     // insert code here...
     print ("Starting Routing Algorithm");
-  
-    int status = initializeIO(argv[1], argv[2]) ;
+    
+    int processedPackets = 0;
+    int totalTableAccess = 0;
+    
+    int status = initializeIO((char *)argv[1],(char *) argv[2]) ;
 
     if (status == OK) {
         
@@ -127,25 +107,41 @@ int main(int argc, const char * argv[]) {
         free(prefixLength);
         //printf("Build of table routing Done!");
         
-        uint32_t *ip = calloc(1, sizeof(uint32_t));
+       uint32_t *ip = calloc(1, sizeof(uint32_t));
        struct timeval start, end;
-    
+       double averageTime, sec, usec = 0.0;
         while ((REACHED_EOF != readInputPacketFileLine(ip) ) )
         {
-            gettimeofday(&start, NULL);
             int *memAccesses = calloc(1, sizeof(int));
+            gettimeofday(&start, NULL);
             int outInterface = lookup(*ip,TBL24,TBLLong,memAccesses);
             gettimeofday(&end, NULL);
             double *search = calloc(1, sizeof(double));
             printOutputLine(*ip, outInterface, &start, &end, search, *memAccesses);
             //printf("Total time %f \n",*search);
+            processedPackets++;
+            totalTableAccess += *memAccesses;
+            usec = end.tv_usec - start.tv_usec;
+            if (usec > end.tv_usec){
+                start.tv_sec += 1;
+            }
+            sec = end.tv_sec - start.tv_sec;
+            
+            averageTime += 10000*sec + usec;
+            free(memAccesses);
+            free(search);
         }
-
+        free(ip);
+        /// Impresion de resultados
+        double averageAccesses =  totalTableAccess / processedPackets;
+        double averageProcessing = averageTime / processedPackets;
+        printSummary(processedPackets, averageAccesses, averageProcessing);
+        print("Ver resultados");
+    
     }else {
         printIOExplanationError(status);
     }
-    /// Busqueda
-     printMemoryTimeUsage();
+
     
     return 0;
 }
@@ -170,15 +166,7 @@ void insert(int16_t *TBL24, struct IpRoute *TBLLong, struct FIBRoute *fibLine ) 
    
     uint32_t tmp = (*fibLine->prefix) & (*netMask);
     uint32_t tbl24Position = tmp >> 8;
-//    int test = 3401580560; // 134.24.124.76/30	24203
 
-    
-//    if (*fibLine->prefix == test) {
-//        print_ip(test);
-//        int hastPosition = hash(*fibLine->prefix,TBL24_SIZE);
-//        
-//        printf("\n \n hash %i, calculatet %i \n",hastPosition,tbl24Position);
-//    }
     
     if (*fibLine->prefixLength < 24) {
         
@@ -191,11 +179,6 @@ void insert(int16_t *TBL24, struct IpRoute *TBLLong, struct FIBRoute *fibLine ) 
             TBL24[ tmp] = *fibLine->outInterface;
 
         }
- 
-//        printf("*************** TBL24 *************\n");
-//        printf("        range = %i \n",repeat);
-//        printf("        TBL24[ %i] = %i \n",tbl24Position,TBL24[tbl24Position]);
-//        printf("        TBL24[ %i] = %i \n",(tbl24Position +(repeat-1)),TBL24[(tbl24Position +(repeat -1))]);
         
     }else {
        // printf("*************** TBLLong *************\n");
@@ -219,7 +202,7 @@ void insertInLongTable(struct IpRoute *TBLLon, uint16_t position, struct FIBRout
  
     int lessImportantBits = *fibLine->prefix & d;
 
-    struct IpRoute *tmp, *head = &TBLLon[abs(position)];
+    struct IpRoute *tmp, *head = &TBLLon[position];
     
     if (head->nextRoute == NULL) {
         
@@ -276,10 +259,8 @@ int16_t *createTBL(void){
         print("No hay suficiente memoria");
     }
     else{
-        print("Funciona");
-        //        TBL[0] = 22;
-        //        TBL[1]= 1;
-        //        TBL[SIZE_TBL-1] = 2;
+        print("Mem Reservada para TBL24");
+
     }
     
     return TBL;
@@ -303,12 +284,11 @@ int lookup(uint32_t ip,int16_t *TBL24 , struct IpRoute *TBLLong,int *memoryAcces
    // printf(" \n output for %i \n", nextHop);
     
     if (nextHop < 0) {
-        
+        *memoryAccesses =1;
         int d  = 0x000000FF;
         int lessImportantBits = ip & d;
        // print_ip(lessImportantBits);
-        
-      
+    
         struct IpRoute *p , *head  = &TBLLong[abs(nextHop)];
         uint8_t counter = 0;
         

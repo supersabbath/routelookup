@@ -20,3 +20,28 @@ int hash(uint32_t IPAddress, int sizeHashTable){
   return (index);
 
 }
+
+
+/**
+ Helper function that allows printing in binary format
+ 
+ */
+const char* toBinaryString(unsigned int num)
+{
+    static char buffer[32*sizeof(num)+1];
+    char* pBuffer = &buffer[sizeof(buffer)-1];
+    
+    do *--pBuffer = '0' + (num & 1);
+    while (num >>= 1);
+    return pBuffer;
+}
+
+void print_ip(int ip)
+{
+    unsigned char bytes[4];
+    bytes[0] = ip & 0xFF;
+    bytes[1] = (ip >> 8) & 0xFF;
+    bytes[2] = (ip >> 16) & 0xFF;
+    bytes[3] = (ip >> 24) & 0xFF;
+    printf("%d.%d.%d.%d\n", bytes[3], bytes[2], bytes[1], bytes[0]);
+}

@@ -25,6 +25,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0C725B361CADA85B004C3EA1 /* prueba2.txt.out */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = prueba2.txt.out; sourceTree = "<group>"; };
 		0CFBE50B1CA0474900EE441B /* pruebatst.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pruebatst.txt; sourceTree = "<group>"; };
 		E136FB551C8C2A7100C67B90 /* prueba0.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = prueba0.txt; sourceTree = "<group>"; };
 		E136FB571C8C2A7100C67B90 /* prueba1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = prueba1.txt; sourceTree = "<group>"; };
@@ -54,6 +55,7 @@
 		E136FB541C8C2A7100C67B90 /* data */ = {
 			isa = PBXGroup;
 			children = (
+				0C725B361CADA85B004C3EA1 /* prueba2.txt.out */,
 				E136FB551C8C2A7100C67B90 /* prueba0.txt */,
 				E136FB571C8C2A7100C67B90 /* prueba1.txt */,
 				E136FB581C8C2A7100C67B90 /* prueba2.txt */,

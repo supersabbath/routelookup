@@ -68,7 +68,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/fernandocanon/Desktop/routelookup/my_route_lookup/data/prueba3.txt"
+            argument = "/Users/fernandocanon/Desktop/routelookup/my_route_lookup/data/prueba1.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
